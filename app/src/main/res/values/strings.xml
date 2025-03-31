@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BlueGreen</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_dashboard">Inventario</string>
+    <string name="title_notifications">Perfil</string>
+    <string name="barcode_text">Código: %s</string>
+    <string name="price_text">Precio: $%s</string>
+</resources>

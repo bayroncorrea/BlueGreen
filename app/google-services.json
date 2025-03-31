@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "529159615584",
+    "firebase_url": "https://bluegreen-57a53-default-rtdb.firebaseio.com",
+    "project_id": "bluegreen-57a53",
+    "storage_bucket": "bluegreen-57a53.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529159615584:android:efb7f29cd9faed8e91bf05",
+        "android_client_info": {
+          "package_name": "com.bb.bluegreen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuXUAAXziOa1lq0vL4EJVNTZbPq_sNP24"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
