@@ -14,9 +14,25 @@ class ProductAdapter(
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     private var onEditClickListener: ((Product) -> Unit)? = null
+    private var onDeleteClickListener: ((Product) -> Unit)? = null
 
+    // Set listener for edit button
     fun setOnEditClickListener(listener: (Product) -> Unit) {
         onEditClickListener = listener
+    }
+
+    // Set listener for delete button
+    fun setOnDeleteClickListener(listener: (Product) -> Unit) {
+        onDeleteClickListener = listener
+    }
+
+    // Add method to remove product from the list
+    fun removeProduct(product: Product) {
+        val position = productList.indexOf(product)
+        if (position != -1) {
+            productList.removeAt(position)  // Remove the product from the list
+            notifyItemRemoved(position)     // Notify the adapter that an item was removed
+        }
     }
 
     class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -26,6 +42,7 @@ class ProductAdapter(
         val stock: TextView = itemView.findViewById(R.id.productstock)
         val productImage: ImageView = itemView.findViewById(R.id.productImage)
         val editButton: ImageView = itemView.findViewById(R.id.editButton)
+        val deleteButton: ImageView = itemView.findViewById(R.id.btnDelete)  // New delete button
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
@@ -46,8 +63,14 @@ class ProductAdapter(
             .error(R.drawable.ic_launcher_foreground)
             .into(holder.productImage)
 
+        // Edit button listener
         holder.editButton.setOnClickListener {
             onEditClickListener?.invoke(product)
+        }
+
+        // Delete button listener
+        holder.deleteButton.setOnClickListener {
+            onDeleteClickListener?.invoke(product)
         }
     }
 
@@ -60,5 +83,3 @@ class ProductAdapter(
         notifyDataSetChanged() // Notificar que la lista ha cambiado
     }
 }
-
-

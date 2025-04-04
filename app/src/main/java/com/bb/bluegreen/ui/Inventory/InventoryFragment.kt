@@ -1,5 +1,6 @@
 package com.bb.bluegreen.ui.Inventory
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -28,17 +29,38 @@ class InventoryFragment : Fragment() {
         _binding = FragmentInventoryBinding.inflate(inflater, container, false)
         database = FirebaseDatabase.getInstance().reference
 
-        // Configurar RecyclerView y adaptador
+        // Setup RecyclerView and Adapter
         setupRecyclerView()
 
-        // Escuchar cambios en la base de datos
+        // Fetch products from Firebase
         fetchProductsFromFirebase()
 
+        // Add Product FAB
         binding.fabAdd.setOnClickListener {
-            addProduct()  // Verifica que este método se está llamando
+            addProduct()  // Add product on FAB click
         }
 
         return binding.root
+    }
+
+    private fun setupRecyclerView() {
+        adapter = ProductAdapter(mutableListOf())
+
+        // Set listener for editing a product
+        adapter.setOnEditClickListener { product ->
+            val editDialog = EditProductDialogFragment(product) { updatedProduct ->
+                updateProductInFirebase(updatedProduct)
+            }
+            editDialog.show(childFragmentManager, "EditProductDialog")
+        }
+
+        // Set listener for deleting a product
+        adapter.setOnDeleteClickListener { product ->
+            showDeleteConfirmationDialog(product)
+        }
+
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
     }
 
     private fun fetchProductsFromFirebase() {
@@ -85,16 +107,34 @@ class InventoryFragment : Fragment() {
             }
     }
 
-    private fun setupRecyclerView() {
-        adapter = ProductAdapter(mutableListOf())
-        adapter.setOnEditClickListener { product ->
-            val editDialog = EditProductDialogFragment(product) { updatedProduct ->
-                updateProductInFirebase(updatedProduct)
+    private fun deleteProductFromFirebase(product: Product) {
+        database.child("products").child(product.id).removeValue()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("Firebase", "Producto eliminado exitosamente")
+                    // Update adapter list by removing the deleted product
+                    adapter.removeProduct(product)
+                } else {
+                    Log.e("Firebase", "Error al eliminar el producto", task.exception)
+                }
             }
-            editDialog.show(childFragmentManager, "EditProductDialog")
+    }
+
+    private fun showDeleteConfirmationDialog(product: Product) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Confirmar eliminación")
+        builder.setMessage("¿Estás seguro de que deseas eliminar este producto?")
+
+        builder.setPositiveButton("Aceptar") { dialog, _ ->
+            deleteProductFromFirebase(product)
+            dialog.dismiss()  // Close the dialog
         }
-        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerView.adapter = adapter
+
+        builder.setNegativeButton("Cancelar") { dialog, _ ->
+            dialog.dismiss()  // Close the dialog
+        }
+
+        builder.show()
     }
 
     private fun updateProductInFirebase(updatedProduct: Product) {
