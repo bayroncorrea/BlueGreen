@@ -1,6 +1,7 @@
 package com.bb.bluegreen.ui.Inventory
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,21 +24,27 @@ class InventoryFragment : Fragment() {
     private lateinit var database: DatabaseReference
     private lateinit var adapter: ProductAdapter
 
+    private var productList: MutableList<Product> = mutableListOf()
+    private var filteredProductList: MutableList<Product> = mutableListOf()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentInventoryBinding.inflate(inflater, container, false)
-        database = FirebaseDatabase.getInstance().reference
+        database = FirebaseDatabase.getInstance().reference.child("products")
 
-        // Setup RecyclerView and Adapter
+        // Configurar RecyclerView y Adaptador
         setupRecyclerView()
 
-        // Fetch products from Firebase
+        // Configurar SearchView
+        setupSearchView()
+
+        // Obtener productos desde Firebase
         fetchProductsFromFirebase()
 
-        // Add Product FAB
+        // Navegar a la pantalla para agregar productos
         binding.fabAdd.setOnClickListener {
-            addProduct()  // Add product on FAB click
+            navigateToAddProductScreen()
         }
 
         return binding.root
@@ -46,7 +53,7 @@ class InventoryFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = ProductAdapter(mutableListOf())
 
-        // Set listener for editing a product
+        // Listener para editar un producto
         adapter.setOnEditClickListener { product ->
             val editDialog = EditProductDialogFragment(product) { updatedProduct ->
                 updateProductInFirebase(updatedProduct)
@@ -54,7 +61,7 @@ class InventoryFragment : Fragment() {
             editDialog.show(childFragmentManager, "EditProductDialog")
         }
 
-        // Set listener for deleting a product
+        // Listener para eliminar un producto
         adapter.setOnDeleteClickListener { product ->
             showDeleteConfirmationDialog(product)
         }
@@ -63,19 +70,48 @@ class InventoryFragment : Fragment() {
         binding.recyclerView.adapter = adapter
     }
 
+    private fun setupSearchView() {
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // Filtrar productos por nombre o código de barras
+                val filteredList = productList.filter {
+                    it.name.contains(newText ?: "", ignoreCase = true) ||
+                            it.barcode.contains(newText ?: "", ignoreCase = true)
+                }
+
+                // Actualizar la lista filtrada y notificar al adaptador
+                filteredProductList.clear()
+                filteredProductList.addAll(filteredList)
+                adapter.updateList(filteredProductList)
+                return true
+            }
+        })
+    }
+
     private fun fetchProductsFromFirebase() {
-        database.child("products").addValueEventListener(object : ValueEventListener {
+        database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val productList = mutableListOf<Product>()
+                productList.clear()
+                val newProductList = mutableListOf<Product>()
                 for (productSnapshot in snapshot.children) {
                     val product = productSnapshot.getValue(Product::class.java)
                     product?.let {
-                        productList.add(it)
+                        newProductList.add(it)
                         Log.d("Firebase", "Producto cargado: ${it.name}")
                     }
                 }
+                // Actualizar las listas con los productos cargados
+                productList.addAll(newProductList)
+                filteredProductList.clear()
+                filteredProductList.addAll(productList)
+
+                // Actualizar el adaptador
+                adapter.updateList(filteredProductList)
                 Log.d("Firebase", "Número de productos cargados: ${productList.size}")
-                adapter.updateList(productList)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -84,40 +120,11 @@ class InventoryFragment : Fragment() {
         })
     }
 
-    private fun addProduct() {
-        val newProduct = Product(
-            id = database.child("products").push().key ?: return,
-            name = "Producto ${adapter.itemCount + 1}",
-            barcode = "000000${adapter.itemCount + 1}",
-            price = (10..100).random().toDouble(),
-            stock = (1..50).random(),
-            imageUrl = "https://www.example.com/product_image.jpg"
+    private fun navigateToAddProductScreen() {
+        val activity = requireActivity()
+        activity.startActivity(
+            Intent(activity, AddProductActivity::class.java)
         )
-        addProductToFirebase(newProduct)
-    }
-
-    private fun addProductToFirebase(product: Product) {
-        database.child("products").child(product.id).setValue(product)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("Firebase", "Producto agregado exitosamente")
-                } else {
-                    Log.e("Firebase", "Error al agregar el producto", task.exception)
-                }
-            }
-    }
-
-    private fun deleteProductFromFirebase(product: Product) {
-        database.child("products").child(product.id).removeValue()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("Firebase", "Producto eliminado exitosamente")
-                    // Update adapter list by removing the deleted product
-                    adapter.removeProduct(product)
-                } else {
-                    Log.e("Firebase", "Error al eliminar el producto", task.exception)
-                }
-            }
     }
 
     private fun showDeleteConfirmationDialog(product: Product) {
@@ -127,18 +134,30 @@ class InventoryFragment : Fragment() {
 
         builder.setPositiveButton("Aceptar") { dialog, _ ->
             deleteProductFromFirebase(product)
-            dialog.dismiss()  // Close the dialog
+            dialog.dismiss()
         }
 
         builder.setNegativeButton("Cancelar") { dialog, _ ->
-            dialog.dismiss()  // Close the dialog
+            dialog.dismiss()
         }
 
         builder.show()
     }
 
+    private fun deleteProductFromFirebase(product: Product) {
+        database.child(product.id).removeValue()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("Firebase", "Producto eliminado exitosamente")
+                    adapter.removeProduct(product)
+                } else {
+                    Log.e("Firebase", "Error al eliminar el producto", task.exception)
+                }
+            }
+    }
+
     private fun updateProductInFirebase(updatedProduct: Product) {
-        database.child("products").child(updatedProduct.id).setValue(updatedProduct)
+        database.child(updatedProduct.id).setValue(updatedProduct)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.d("Firebase", "Producto actualizado exitosamente")
