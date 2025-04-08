@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.FragmentHomeBinding
-import com.bb.bluegreen.ui.Home.HomeViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : Fragment() {
 
@@ -28,13 +28,17 @@ class HomeFragment : Fragment() {
         setupObservers()
         setupButtons()
 
+        // Cargar el inventario desde Firebase al iniciar el fragmento
+        viewModel.loadInventoryFromFirebase() // Llamada al ViewModel
+        FirebaseFirestore.setLoggingEnabled(true)
+
         return binding.root
     }
 
     private fun setupObservers() {
         // Observa el total de stock
         viewModel.totalStock.observe(viewLifecycleOwner) { stock ->
-            binding.txtInventorySummary.text = "Tienes $stock productos en stock"
+            binding.txtInventorySummary.text = getString(R.string.inventory_summary, stock)
         }
 
         // Observa alertas de stock bajo
@@ -62,14 +66,17 @@ class HomeFragment : Fragment() {
     private fun setupButtons() {
         binding.btnAddProduct.setOnClickListener {
             // Navegar al fragmento de agregar producto
+            // Puedes implementar la navegación o la acción que desees aquí
         }
 
         binding.btnViewInventory.setOnClickListener {
+            // Navegar a la vista del inventario
             findNavController().navigate(R.id.mobile_navigation)
         }
 
         binding.btnSettings.setOnClickListener {
             // Navegar a configuración
+            // Puedes implementar la acción de navegación aquí
         }
     }
 
