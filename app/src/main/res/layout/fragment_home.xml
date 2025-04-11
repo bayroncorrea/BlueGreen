@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_backgroud"
-    android:padding="16dp">
+    >
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,10 +14,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_background"
+            android:background="@drawable/fondo"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="25dp">
 
             <!-- Resumen del Inventario -->
             <androidx.cardview.widget.CardView
@@ -34,7 +34,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:background="#c5c764">
 
                     <TextView
                         android:id="@+id/txtInventorySummary"
@@ -65,7 +66,7 @@
                     android:layout_height="60dp"
                     android:background="@drawable/circle_button"
                     android:contentDescription="Agregar Producto"
-                    android:src="@drawable/ic_notifications_black_24dp" />
+                    android:src="@android:drawable/ic_input_add"/>
 
                 <!-- Ver Inventario -->
                 <ImageButton
@@ -102,7 +103,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:background="#c5c764">
 
                     <TextView
                         android:id="@+id/txtLowStockAlert"
@@ -122,6 +124,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:layout_marginBottom="30dp"
+                android:layout_gravity="center_horizontal"
                 tools:listitem="@layout/item_inventory" />
 
             <TextView
