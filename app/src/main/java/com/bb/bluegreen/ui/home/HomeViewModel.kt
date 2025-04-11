@@ -10,10 +10,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 class HomeViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    private var lowStockThreshold = 5 // Umbral configurable para bajo stock
 
-    // _totalStock should store the total stock of all products in the inventory
-    private val _totalStock = MutableLiveData(0)  // Default to 0 as Int
-    val totalStock: MutableLiveData<Int> get() = _totalStock
+    private val _totalStock = MutableLiveData(0)
+    val totalStock: LiveData<Int> get() = _totalStock
 
     private val _lowStockAlert = MutableLiveData("")
     val lowStockAlert: LiveData<String> get() = _lowStockAlert
@@ -23,71 +23,70 @@ class HomeViewModel : ViewModel() {
 
     private var inventoryList: List<Product> = listOf()
 
-    // Function to load products from Firebase and update total stock
     fun loadInventoryFromFirebase() {
         firestore.collection("products")
             .get()
             .addOnSuccessListener { querySnapshot ->
-                // Debug: ver datos crudos
-                querySnapshot.documents.forEach { doc ->
-                    Log.d("FirestoreData", "Document ID: ${doc.id}")
-                    Log.d("FirestoreData", "Data: ${doc.data}")
-                    Log.d("FirestoreData", "Stock raw value: ${doc.get("stock")}")
-                }
+                Log.d("FirestoreDebug", "Documentos recibidos: ${querySnapshot.documents.size}")
 
-                // Mapeo manual para mejor control
                 val products = querySnapshot.documents.mapNotNull { doc ->
                     try {
+                        val stock = doc.getDouble("stock")?.toInt() ?: 0
+                        Log.d("ProductDebug", "Producto: ${doc.getString("name")} - Stock: $stock")
+
                         Product(
                             id = doc.id,
-                            name = doc.getString("name") ?: "",
+                            name = doc.getString("name") ?: "Sin nombre",
                             barcode = doc.getString("barcode") ?: "",
                             price = doc.getDouble("price") ?: 0.0,
-                            stock = doc.getLong("stock")?.toInt() ?: 0, // Conversión explícita
+                            stock = stock,
                             imageUrl = doc.getString("imageUrl") ?: ""
                         )
                     } catch (e: Exception) {
-                        Log.e("ProductMapping", "Error mapping document ${doc.id}", e)
+                        Log.e("MappingError", "Error con documento ${doc.id}", e)
                         null
                     }
                 }
 
-                // Debug: ver productos mapeados
-                products.forEach { product ->
-                    Log.d("ProductDebug", "Mapped product: ${product.name} - Stock: ${product.stock}")
-                }
-
+                Log.d("InventoryDebug", "Productos mapeados: ${products.size}")
                 updateInventory(products)
-                val totalStockValue = products.sumOf { it.stock }
-                Log.d("TotalStock", "Calculated total: $totalStockValue")
-                updateStock(totalStockValue)
+                calculateTotalStock(products)
             }
-            .addOnFailureListener { exception ->
-                Log.e("HomeViewModel", "Error fetching products", exception)
+            .addOnFailureListener { e ->
+                Log.e("FirestoreError", "Error al cargar productos", e)
+                _totalStock.value = 0 // Resetear a 0 en caso de error
             }
     }
 
-    // Function to update the total stock value
-    private fun updateStock(stock: Int) {
-        _totalStock.value = stock
-        checkLowStock() // Check if any products are low on stock after updating the total
+    private fun calculateTotalStock(products: List<Product>) {
+        val total = products.sumOf { it.stock }
+        Log.d("StockDebug", "Productos encontrados: ${products.size}")
+        Log.d("StockDebug", "Stock total calculado: $total")
+        _totalStock.value = total
+        checkLowStock()
     }
 
-    // Function to update the inventory list
     private fun updateInventory(products: List<Product>) {
         inventoryList = products
-        checkLowStock() // Check for low stock after updating the inventory list
+        checkLowStock()
     }
 
-    // Function to check for low stock products
     private fun checkLowStock() {
-        val lowStockList = inventoryList.filter { it.stock < 5 } // Filter products with stock < 5
+        val lowStockList = inventoryList.filter { it.stock < lowStockThreshold }
         _lowStockProducts.value = lowStockList
 
-        _lowStockAlert.value = if (lowStockList.isNotEmpty()) {
-            "¡Alerta! Algunos productos tienen stock bajo."
-        } else {
-            ""
+        Log.d("LowStockDebug", "Productos con bajo stock: ${lowStockList.size}")
+
+        _lowStockAlert.value = when {
+            lowStockList.any { it.stock == 0 } -> "¡Alerta! Tienes productos agotados"
+            lowStockList.isNotEmpty() -> "¡Atención! Algunos productos tienen stock bajo"
+            else -> ""
         }
+    }
+
+    // Para actualizar el umbral de bajo stock si es necesario
+    fun setLowStockThreshold(threshold: Int) {
+        lowStockThreshold = threshold
+        checkLowStock()
     }
 }

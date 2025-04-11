@@ -6,10 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.FragmentHomeBinding
-import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : Fragment() {
 
@@ -21,62 +20,67 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+
+// Inicialización del RecyclerView
+        lowStockAdapter = LowStockAdapter(emptyList())
+        binding.recyclerLowStock.adapter = lowStockAdapter
+        binding.recyclerLowStock.layoutManager =
+            LinearLayoutManager(requireContext())
+        binding.recyclerLowStock.setHasFixedSize(true)
 
         setupObservers()
         setupButtons()
 
-        // Cargar el inventario desde Firebase al iniciar el fragmento
-        viewModel.loadInventoryFromFirebase() // Llamada al ViewModel
-        FirebaseFirestore.setLoggingEnabled(true)
+        // Cargar inventario desde Firestore
+        viewModel.loadInventoryFromFirebase()
 
         return binding.root
     }
 
     private fun setupObservers() {
-        // Observa el total de stock
-        viewModel.totalStock.observe(viewLifecycleOwner) { stock ->
-            binding.txtInventorySummary.text = getString(R.string.inventory_summary, stock)
-        }
-
-        // Observa alertas de stock bajo
-        viewModel.lowStockAlert.observe(viewLifecycleOwner) { alertMessage ->
-            if (alertMessage.isNotEmpty()) {
-                binding.txtLowStockAlert.text = alertMessage
-                binding.txtLowStockAlert.visibility = View.VISIBLE
-            } else {
-                binding.txtLowStockAlert.visibility = View.GONE
+        // Observa cambios en el total de productos en inventario
+        viewModel.totalStock.observe(viewLifecycleOwner) { total ->
+            binding.txtInventorySummary.text = when {
+                total == 0 -> getString(R.string.no_products_in_stock)
+                total == 1 -> getString(R.string.one_product_in_stock)
+                else -> getString(R.string.multiple_products_in_stock, total)
             }
         }
 
-        // Observa productos con stock bajo
+        // Observa productos con bajo stock
         viewModel.lowStockProducts.observe(viewLifecycleOwner) { lowStockList ->
             if (lowStockList.isNotEmpty()) {
+                lowStockAdapter.updateProducts(lowStockList)
                 binding.recyclerLowStock.visibility = View.VISIBLE
-                lowStockAdapter = LowStockAdapter(lowStockList)
-                binding.recyclerLowStock.adapter = lowStockAdapter
+                binding.txtEmptyLowStock.visibility = View.GONE
             } else {
                 binding.recyclerLowStock.visibility = View.GONE
+                binding.txtEmptyLowStock.visibility = View.VISIBLE
             }
+        }
+
+        // Observa alerta de bajo stock
+        viewModel.lowStockAlert.observe(viewLifecycleOwner) { alertText ->
+            binding.txtLowStockAlert.text = alertText
+            binding.txtLowStockAlert.visibility =
+                if (alertText.isEmpty()) View.GONE else View.VISIBLE
         }
     }
 
     private fun setupButtons() {
         binding.btnAddProduct.setOnClickListener {
-            // Navegar al fragmento de agregar producto
-            // Puedes implementar la navegación o la acción que desees aquí
+            // Navegar para agregar producto
         }
 
         binding.btnViewInventory.setOnClickListener {
-            // Navegar a la vista del inventario
-            findNavController().navigate(R.id.mobile_navigation)
+            // Navegar para ver inventario
         }
 
         binding.btnSettings.setOnClickListener {
-            // Navegar a configuración
-            // Puedes implementar la acción de navegación aquí
+            // Navegar a configuraciones
         }
     }
 

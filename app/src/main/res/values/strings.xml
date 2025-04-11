@@ -7,4 +7,7 @@
     <string name="price_text">Precio: $%s</string>
 
     <string name="inventory_summary">Tienes %d productos en stock</string>
+    <string name="no_products_in_stock">No tienes productos en stock</string>
+    <string name="one_product_in_stock">Tienes 1 producto en stock</string>
+    <string name="multiple_products_in_stock">Tienes %d productos en stock</string>
 </resources>

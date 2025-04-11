@@ -6,9 +6,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.ItemInventoryBinding
 import com.bb.bluegreen.ui.Inventory.Product
+import com.bumptech.glide.Glide
 import java.text.DecimalFormat
 
-class LowStockAdapter(private var products: List<Product>) :
+class LowStockAdapter(private var productList: List<Product>) :
     RecyclerView.Adapter<LowStockAdapter.LowStockViewHolder>() {
 
     class LowStockViewHolder(private val binding: ItemInventoryBinding) :
@@ -16,14 +17,26 @@ class LowStockAdapter(private var products: List<Product>) :
 
         fun bind(product: Product) {
             binding.productName.text = product.name
-            binding.productBarcode.text = binding.root.context.getString(R.string.barcode_text, product.barcode)
+            binding.productBarcode.text =
+                binding.root.context.getString(R.string.barcode_text, product.barcode)
 
-            // Usar DecimalFormat para dar formato al precio
             val decimalFormat = DecimalFormat("#.##")
-            binding.productPrice.text = binding.root.context.getString(R.string.price_text, decimalFormat.format(product.price))
+            binding.productPrice.text = binding.root.context.getString(
+                R.string.price_text,
+                decimalFormat.format(product.price)
+            )
+
+            if (product.imageUrl.isNotEmpty()) {
+                Glide.with(binding.root.context)
+                    .load(product.imageUrl)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.error)
+                    .into(binding.productImage)
+            } else {
+                binding.productImage.setImageResource(R.drawable.placeholder)
+            }
         }
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LowStockViewHolder {
         val binding = ItemInventoryBinding.inflate(
@@ -33,14 +46,13 @@ class LowStockAdapter(private var products: List<Product>) :
     }
 
     override fun onBindViewHolder(holder: LowStockViewHolder, position: Int) {
-        holder.bind(products[position])
+        holder.bind(productList[position])
     }
 
-    override fun getItemCount(): Int = products.size
+    override fun getItemCount(): Int = productList.size
 
-    // Actualizar la lista de productos con bajo stock
-    fun updateProducts(newProducts: List<Product>) {
-        this.products = newProducts
-        notifyDataSetChanged() // Notificar el cambio para actualizar el RecyclerView
+    fun updateProducts(newList: List<Product>) {
+        productList = newList
+        notifyDataSetChanged()
     }
 }

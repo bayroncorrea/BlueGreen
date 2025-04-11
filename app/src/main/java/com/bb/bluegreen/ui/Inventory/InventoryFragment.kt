@@ -10,18 +10,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.databinding.FragmentInventoryBinding
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.toObject
 
 class InventoryFragment : Fragment() {
 
     private var _binding: FragmentInventoryBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var database: DatabaseReference
+    private lateinit var firestore: FirebaseFirestore
     private lateinit var adapter: ProductAdapter
 
     private var productList: MutableList<Product> = mutableListOf()
@@ -31,7 +29,7 @@ class InventoryFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentInventoryBinding.inflate(inflater, container, false)
-        database = FirebaseDatabase.getInstance().reference.child("products")
+        firestore = FirebaseFirestore.getInstance() // Instancia de Firestore
 
         // Configurar RecyclerView y Adaptador
         setupRecyclerView()
@@ -39,8 +37,8 @@ class InventoryFragment : Fragment() {
         // Configurar SearchView
         setupSearchView()
 
-        // Obtener productos desde Firebase
-        fetchProductsFromFirebase()
+        // Obtener productos desde Firestore
+        fetchProductsFromFirestore()
 
         // Navegar a la pantalla para agregar productos
         binding.fabAdd.setOnClickListener {
@@ -56,7 +54,7 @@ class InventoryFragment : Fragment() {
         // Listener para editar un producto
         adapter.setOnEditClickListener { product ->
             val editDialog = EditProductDialogFragment(product) { updatedProduct ->
-                updateProductInFirebase(updatedProduct)
+                updateProductInFirestore(updatedProduct)
             }
             editDialog.show(childFragmentManager, "EditProductDialog")
         }
@@ -92,16 +90,19 @@ class InventoryFragment : Fragment() {
         })
     }
 
-    private fun fetchProductsFromFirebase() {
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
+    private fun fetchProductsFromFirestore() {
+        // Obtener los productos desde Firestore
+        firestore.collection("products")
+            .orderBy("name", Query.Direction.ASCENDING) // Puedes cambiar el orden si lo prefieres
+            .get()
+            .addOnSuccessListener { snapshot ->
                 productList.clear()
                 val newProductList = mutableListOf<Product>()
-                for (productSnapshot in snapshot.children) {
-                    val product = productSnapshot.getValue(Product::class.java)
+                for (document in snapshot) {
+                    val product = document.toObject<Product>()
                     product?.let {
                         newProductList.add(it)
-                        Log.d("Firebase", "Producto cargado: ${it.name}")
+                        Log.d("Firestore", "Producto cargado: ${it.name}")
                     }
                 }
                 // Actualizar las listas con los productos cargados
@@ -111,13 +112,11 @@ class InventoryFragment : Fragment() {
 
                 // Actualizar el adaptador
                 adapter.updateList(filteredProductList)
-                Log.d("Firebase", "Número de productos cargados: ${productList.size}")
+                Log.d("Firestore", "Número de productos cargados: ${productList.size}")
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("Firebase", "Error al cargar los productos", error.toException())
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Error al cargar los productos", exception)
             }
-        })
     }
 
     private fun navigateToAddProductScreen() {
@@ -133,7 +132,7 @@ class InventoryFragment : Fragment() {
         builder.setMessage("¿Estás seguro de que deseas eliminar este producto?")
 
         builder.setPositiveButton("Aceptar") { dialog, _ ->
-            deleteProductFromFirebase(product)
+            deleteProductFromFirestore(product)
             dialog.dismiss()
         }
 
@@ -144,25 +143,25 @@ class InventoryFragment : Fragment() {
         builder.show()
     }
 
-    private fun deleteProductFromFirebase(product: Product) {
-        database.child(product.id).removeValue()
+    private fun deleteProductFromFirestore(product: Product) {
+        firestore.collection("products").document(product.id).delete()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("Firebase", "Producto eliminado exitosamente")
+                    Log.d("Firestore", "Producto eliminado exitosamente")
                     adapter.removeProduct(product)
                 } else {
-                    Log.e("Firebase", "Error al eliminar el producto", task.exception)
+                    Log.e("Firestore", "Error al eliminar el producto", task.exception)
                 }
             }
     }
 
-    private fun updateProductInFirebase(updatedProduct: Product) {
-        database.child(updatedProduct.id).setValue(updatedProduct)
+    private fun updateProductInFirestore(updatedProduct: Product) {
+        firestore.collection("products").document(updatedProduct.id).set(updatedProduct)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("Firebase", "Producto actualizado exitosamente")
+                    Log.d("Firestore", "Producto actualizado exitosamente")
                 } else {
-                    Log.e("Firebase", "Error al actualizar el producto", task.exception)
+                    Log.e("Firestore", "Error al actualizar el producto", task.exception)
                 }
             }
     }

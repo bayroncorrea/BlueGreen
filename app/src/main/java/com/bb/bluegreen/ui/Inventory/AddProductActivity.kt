@@ -1,27 +1,21 @@
 package com.bb.bluegreen.ui.Inventory
 
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bb.bluegreen.databinding.ActivityAddProductBinding
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 
 class AddProductActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddProductBinding
-    private lateinit var database: DatabaseReference
-    private var selectedImageUri: Uri? = null
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance() // Firestore instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Inicializar referencia a Firebase
-        database = FirebaseDatabase.getInstance().reference.child("products")
 
         // Configurar el botón para seleccionar la imagen
         binding.btnSelectImage.setOnClickListener {
@@ -38,7 +32,6 @@ class AddProductActivity : AppCompatActivity() {
     private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             binding.ivProductImage.setImageURI(uri)
-            selectedImageUri = uri // Guarda el URI de la imagen seleccionada
         }
     }
 
@@ -54,34 +47,53 @@ class AddProductActivity : AppCompatActivity() {
             return
         }
 
-        // Si no se selecciona una imagen, usa una imagen por defecto
-        val imageUri = selectedImageUri?.toString() ?: "https://example.com/placeholder.jpg"
-
         // Crear un objeto de producto
         val newProduct = Product(
-            id = database.push().key ?: return, // Verifica que key no sea null
+            id = firestore.collection("products").document().id, // ID automático de Firestore
             name = name,
             barcode = barcode,
             price = price,
             stock = stock,  // El stock es Int
-            imageUrl = imageUri
+            imageUrl = "https://example.com/placeholder.jpg"
         )
 
-        addProductToFirebase(newProduct)
+        // Llamar para agregar el producto a Firestore
+        addProductToFirestore(newProduct)
+
+        // Llamar a updateStock si necesitas actualizar el stock de un producto existente
+        // Si el producto ya existe en Firestore, por ejemplo, actualiza el stock
+        // Aquí se puede usar updateStock con el id del producto que ya existe:
+        // updateStock(newProduct.id, newProduct.stock)
     }
 
-    // Lógica para agregar el producto a Firebase
-    private fun addProductToFirebase(product: Product) {
-        database.child(product.id).setValue(product)
+    // Lógica para agregar el producto a Firestore
+    private fun addProductToFirestore(product: Product) {
+        val productRef = firestore.collection("products").document(product.id)
+
+        productRef.set(product)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(this, "Producto agregado exitosamente", Toast.LENGTH_SHORT).show()
                     finish() // Cerrar la actividad y volver atrás
                 } else {
-                    // Mejorar el manejo de errores
                     val errorMessage = task.exception?.message ?: "Error desconocido"
                     Toast.makeText(this, "Error al agregar el producto: $errorMessage", Toast.LENGTH_SHORT).show()
                 }
+            }
+    }
+
+    // Método para actualizar el stock de un producto existente en Firestore
+    private fun updateStock(productId: String, newStock: Int) {
+        val productRef = firestore.collection("products").document(productId)
+
+        // Actualiza solo el campo stock
+        productRef.update("stock", newStock)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Stock actualizado correctamente", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { exception ->
+                val errorMessage = exception.message ?: "Error desconocido"
+                Toast.makeText(this, "Error al actualizar el stock: $errorMessage", Toast.LENGTH_SHORT).show()
             }
     }
 }
