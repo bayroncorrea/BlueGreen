@@ -16,11 +16,11 @@ data class Product(
     var price: Double = 0.0,
 
     @get:PropertyName("stock") @set:PropertyName("stock")
-    var stock: Int = 0,  // Cambiado a Int directamente
+    var stock: Int = 0,
 
     @get:PropertyName("imageUrl") @set:PropertyName("imageUrl")
     var imageUrl: String = ""
 ) {
-    // Constructor sin argumentos requerido por Firestore
+    // Constructor sin parámetros requerido por Firestore
     constructor() : this("", "", "", 0.0, 0, "")
 }

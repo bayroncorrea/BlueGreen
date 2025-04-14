@@ -1,4 +1,4 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -6,65 +6,108 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginTop="100dp">
+        android:padding="24dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Agregar Producto"
-            android:textSize="40sp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
+            android:text="Agregar Producto"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/etProductName"
+        <!-- Nombre -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre del producto" />
+            android:hint="Nombre del producto">
 
-        <EditText
-            android:id="@+id/etBarcode"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Código de barras -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Código de barras" />
+            android:layout_marginTop="12dp"
+            android:hint="Código de barras">
 
-        <EditText
-            android:id="@+id/etPrice"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etBarcode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Precio -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Precio"
-            android:inputType="numberDecimal" />
+            android:layout_marginTop="12dp"
+            android:hint="Precio">
 
-        <EditText
-            android:id="@+id/etStock"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Stock -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Stock"
-            android:inputType="number" />
+            android:layout_marginTop="12dp"
+            android:hint="Stock">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etStock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Imagen -->
         <ImageView
             android:id="@+id/ivProductImage"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/image_border"
             android:scaleType="centerCrop"
             android:src="@drawable/placeholder" />
 
-        <Button
+        <!-- Botón seleccionar imagen -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSelectImage"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:textSize="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seleccionar imagen"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="16dp"
+            android:text="Seleccionar imagen" />
 
-        <Button
+        <!-- Botón agregar producto -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddProduct"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/teal_700"
             android:text="Agregar Producto"
-            android:layout_marginTop="16dp" />
+            android:textColor="@android:color/white" />
 
+        <!-- ProgressBar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
     </LinearLayout>
-</ScrollView>
+    </androidx.core.widget.NestedScrollView>

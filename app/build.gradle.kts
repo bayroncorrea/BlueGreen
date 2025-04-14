@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.database.ktx)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,5 +68,8 @@ dependencies {
     implementation (libs.firebase.database)
     implementation (libs.glide.v4120)
     annotationProcessor (libs.compiler.v4120)
+    implementation (libs.firebase.storage.ktx)
+    implementation(libs.okhttp)
+    implementation(libs.json)
 
 }
