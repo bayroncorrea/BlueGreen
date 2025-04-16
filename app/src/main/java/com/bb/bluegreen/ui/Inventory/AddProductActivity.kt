@@ -2,10 +2,8 @@ package com.bb.bluegreen.ui.Inventory
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -24,7 +22,6 @@ import com.bb.bluegreen.databinding.ActivityAddProductBinding
 import com.bb.bluegreen.databinding.DialogProgressBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageException
 import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -35,7 +32,6 @@ import okhttp3.Response
 import org.json.JSONObject
 import okhttp3.Callback
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -59,9 +55,7 @@ class AddProductActivity : AppCompatActivity() {
                     binding.ivProductImage.setImageURI(it)
                 } else {
                     Toast.makeText(
-                        this,
-                        "La imagen seleccionada no es accesible",
-                        Toast.LENGTH_SHORT
+                        this, "La imagen seleccionada no es accesible", Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -75,9 +69,7 @@ class AddProductActivity : AppCompatActivity() {
                     binding.ivProductImage.setImageURI(it)
                 } else {
                     Toast.makeText(
-                        this,
-                        "La imagen seleccionada no es accesible",
-                        Toast.LENGTH_SHORT
+                        this, "La imagen seleccionada no es accesible", Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -134,10 +126,8 @@ class AddProductActivity : AppCompatActivity() {
 
     private fun initProgressDialog() {
         val progressBinding = DialogProgressBinding.inflate(LayoutInflater.from(this))
-        progressDialog = AlertDialog.Builder(this)
-            .setView(progressBinding.root)
-            .setCancelable(false)
-            .create()
+        progressDialog =
+            AlertDialog.Builder(this).setView(progressBinding.root).setCancelable(false).create()
 
         progressBinding.tvMessage.text = getString(R.string.uploading_image)
     }
@@ -154,15 +144,12 @@ class AddProductActivity : AppCompatActivity() {
 
     private fun openImageOptions() {
         val options = arrayOf("Seleccionar desde galería", "Tomar foto")
-        AlertDialog.Builder(this)
-            .setTitle("Agregar imagen")
-            .setItems(options) { _, which ->
+        AlertDialog.Builder(this).setTitle("Agregar imagen").setItems(options) { _, which ->
                 when (which) {
                     0 -> openGallery()
                     1 -> checkCameraPermission()
                 }
-            }
-            .show()
+            }.show()
     }
 
     private fun openGallery() {
@@ -225,8 +212,7 @@ class AddProductActivity : AppCompatActivity() {
                 )
             ) {
                 showPermissionExplanation(
-                    "Para tomar fotos, necesitamos acceso a la cámara",
-                    Manifest.permission.CAMERA
+                    "Para tomar fotos, necesitamos acceso a la cámara", Manifest.permission.CAMERA
                 )
             } else {
                 requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -235,9 +221,7 @@ class AddProductActivity : AppCompatActivity() {
     }
 
     private fun showPermissionExplanation(message: String, permission: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Permiso requerido")
-            .setMessage(message)
+        AlertDialog.Builder(this).setTitle("Permiso requerido").setMessage(message)
             .setPositiveButton("Aceptar") { _, _ ->
                 when (permission) {
                     Manifest.permission.CAMERA -> requestCameraPermissionLauncher.launch(permission)
@@ -245,9 +229,7 @@ class AddProductActivity : AppCompatActivity() {
                         permission
                     )
                 }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+            }.setNegativeButton("Cancelar", null).show()
     }
 
     private fun openCamera() {
@@ -297,9 +279,7 @@ class AddProductActivity : AppCompatActivity() {
 
         if (name.isBlank() || barcode.isBlank() || price == null || stock == null) {
             Toast.makeText(
-                this,
-                "Por favor, complete todos los campos correctamente",
-                Toast.LENGTH_SHORT
+                this, "Por favor, complete todos los campos correctamente", Toast.LENGTH_SHORT
             ).show()
             return
         }
@@ -323,33 +303,24 @@ class AddProductActivity : AppCompatActivity() {
 
         } ?: run {
             saveProductToFirestore(
-                productId,
-                name,
-                barcode,
-                price,
-                stock,
-                "https://example.com/default_product.png"
+                productId, name, barcode, price, stock, "https://example.com/default_product.png"
             )
         }
     }
 
     private fun uploadImageToCloudinary(
-        uri: Uri,
-        onSuccess: (String) -> Unit,
-        onError: (String) -> Unit
+        uri: Uri, onSuccess: (String) -> Unit, onError: (String) -> Unit
     ) {
         val file = uriToFile(uri) ?: return onError("No se pudo acceder a la imagen")
 
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
+        val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file", file.name, file.asRequestBody("image/*".toMediaType()))
             .addFormDataPart("upload_preset", "BlueGreen")// 🔒 Configura esto en Cloudinary
             .build()
 
         val request = Request.Builder()
             .url("https://api.cloudinary.com/v1_1/dq2rzordz/image/upload") // 👈 Reemplaza con tu cloud name
-            .post(requestBody)
-            .build()
+            .post(requestBody).build()
 
         val client = OkHttpClient()
         client.newCall(request).enqueue(object : Callback {
@@ -402,18 +373,13 @@ class AddProductActivity : AppCompatActivity() {
             "imageUrl" to imageUrl
         )
 
-        firestore.collection("products").document(productId)
-            .set(product)
-            .addOnSuccessListener {
+        firestore.collection("products").document(productId).set(product).addOnSuccessListener {
                 Toast.makeText(this, "Producto agregado exitosamente", Toast.LENGTH_SHORT).show()
                 finish()
-            }
-            .addOnFailureListener { e ->
+            }.addOnFailureListener { e ->
                 Log.e("FIRESTORE_ERROR", "Error al guardar producto: ${e.message}")
                 Toast.makeText(
-                    this,
-                    "Error al guardar el producto: ${e.message}",
-                    Toast.LENGTH_SHORT
+                    this, "Error al guardar el producto: ${e.message}", Toast.LENGTH_SHORT
                 ).show()
             }
     }

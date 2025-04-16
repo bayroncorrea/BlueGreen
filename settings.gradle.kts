@@ -11,14 +11,15 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io") // 👈 Agrega JitPack aquí
     }
 }
 
 rootProject.name = "BlueGreen"
 include(":app")
- 

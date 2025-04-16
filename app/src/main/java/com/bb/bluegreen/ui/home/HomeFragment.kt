@@ -1,5 +1,6 @@
 package com.bb.bluegreen.ui.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.FragmentHomeBinding
+import com.bb.bluegreen.ui.Inventory.AddProductActivity
 
 class HomeFragment : Fragment() {
 
@@ -72,7 +74,8 @@ class HomeFragment : Fragment() {
 
     private fun setupButtons() {
         binding.btnAddProduct.setOnClickListener {
-            // Navegar para agregar producto
+            val activity = requireActivity()
+            activity.startActivity(Intent(activity, AddProductActivity::class.java))
         }
 
         binding.btnViewInventory.setOnClickListener {

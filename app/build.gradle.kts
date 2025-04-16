@@ -71,5 +71,4 @@ dependencies {
     implementation (libs.firebase.storage.ktx)
     implementation(libs.okhttp)
     implementation(libs.json)
-
 }

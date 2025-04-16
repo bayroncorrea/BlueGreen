@@ -7,6 +7,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.databinding.FragmentInventoryBinding
@@ -27,9 +30,14 @@ class InventoryFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentInventoryBinding.inflate(inflater, container, false)
-        firestore = FirebaseFirestore.getInstance() // Instancia de Firestore
+        firestore = FirebaseFirestore.getInstance()
+
+        // Botón de ordenamiento
+        binding.btnSort.setOnClickListener {
+            showSortOptions()
+        }
 
         // Configurar RecyclerView y Adaptador
         setupRecyclerView()
@@ -40,7 +48,7 @@ class InventoryFragment : Fragment() {
         // Obtener productos desde Firestore
         fetchProductsFromFirestore()
 
-        // Navegar a la pantalla para agregar productos
+        // FAB para agregar productos
         binding.fabAdd.setOnClickListener {
             navigateToAddProductScreen()
         }
@@ -48,10 +56,23 @@ class InventoryFragment : Fragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Ajuste de FAB según barras del sistema
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fabAdd) { fab, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            fab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = systemBars.bottom + 16
+                marginEnd = 16
+            }
+            insets
+        }
+    }
+
     private fun setupRecyclerView() {
         adapter = ProductAdapter(mutableListOf())
 
-        // Listener para editar un producto
         adapter.setOnEditClickListener { product ->
             val editDialog = EditProductDialogFragment(product) { updatedProduct ->
                 updateProductInFirestore(updatedProduct)
@@ -59,7 +80,6 @@ class InventoryFragment : Fragment() {
             editDialog.show(childFragmentManager, "EditProductDialog")
         }
 
-        // Listener para eliminar un producto
         adapter.setOnDeleteClickListener { product ->
             showDeleteConfirmationDialog(product)
         }
@@ -69,51 +89,82 @@ class InventoryFragment : Fragment() {
     }
 
     private fun setupSearchView() {
-        binding.searchView.setOnQueryTextListener(object :
-            androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
+        binding.searchView.apply {
+            // Configurar el SearchView para que esté expandido por defecto
+            isIconified = false
+            setIconifiedByDefault(false)
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                // Filtrar productos por nombre o código de barras
-                val filteredList = productList.filter {
-                    it.name.contains(newText ?: "", ignoreCase = true) ||
-                            it.barcode.contains(newText ?: "", ignoreCase = true)
+            // Mostrar teclado cuando la búsqueda se toque
+            setOnQueryTextFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    post {
+                        val imm =
+                            requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+                                    as android.view.inputmethod.InputMethodManager
+                        imm.showSoftInput(
+                            this,
+                            android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT
+                        )
+                    }
                 }
-
-                // Actualizar la lista filtrada y notificar al adaptador
-                filteredProductList.clear()
-                filteredProductList.addAll(filteredList)
-                adapter.updateList(filteredProductList)
-                return true
             }
-        })
+
+            // Expande el SearchView al tocar
+            setOnClickListener {
+                if (isIconified) {
+                    isIconified = false
+                    requestFocus()
+                }
+            }
+
+            // Configurar la lógica de búsqueda
+            setOnQueryTextListener(object :
+                androidx.appcompat.widget.SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean = false
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    val filteredList = productList.filter {
+                        it.name.contains(newText ?: "", ignoreCase = true) ||
+                                it.barcode.contains(newText ?: "", ignoreCase = true)
+                    }
+
+                    filteredProductList.clear()
+                    filteredProductList.addAll(filteredList)
+                    adapter.updateList(filteredProductList)
+                    return true
+                }
+            })
+
+            // Permitir cerrar el SearchView manualmente (cuando se toca la X)
+            setOnCloseListener {
+                // Cuando se cierra, eliminar el foco y colapsarlo
+                clearFocus()
+                isIconified = true
+                false // Dejar que el SearchView haga su trabajo
+            }
+        }
     }
 
     private fun fetchProductsFromFirestore() {
-        // Obtener los productos desde Firestore
         firestore.collection("products")
-            .orderBy("name", Query.Direction.ASCENDING) // Puedes cambiar el orden si lo prefieres
+            .orderBy("name", Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { snapshot ->
                 productList.clear()
                 val newProductList = mutableListOf<Product>()
+
                 for (document in snapshot) {
                     val product = document.toObject<Product>()
-                    product?.let {
-                        newProductList.add(it)
-                        Log.d("Firestore", "Producto cargado: ${it.name}")
-                    }
+                    product?.let { newProductList.add(it) }
+                    Log.d("Firestore", "Producto cargado: ${product.name}")
                 }
-                // Actualizar las listas con los productos cargados
+
                 productList.addAll(newProductList)
                 filteredProductList.clear()
                 filteredProductList.addAll(productList)
 
-                // Actualizar el adaptador
                 adapter.updateList(filteredProductList)
-                Log.d("Firestore", "Número de productos cargados: ${productList.size}")
+                Log.d("Firestore", "Productos totales: ${productList.size}")
             }
             .addOnFailureListener { exception ->
                 Log.e("Firestore", "Error al cargar los productos", exception)
@@ -122,36 +173,29 @@ class InventoryFragment : Fragment() {
 
     private fun navigateToAddProductScreen() {
         val activity = requireActivity()
-        activity.startActivity(
-            Intent(activity, AddProductActivity::class.java)
-        )
+        activity.startActivity(Intent(activity, AddProductActivity::class.java))
     }
 
     private fun showDeleteConfirmationDialog(product: Product) {
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Confirmar eliminación")
-        builder.setMessage("¿Estás seguro de que deseas eliminar este producto?")
-
-        builder.setPositiveButton("Aceptar") { dialog, _ ->
-            deleteProductFromFirestore(product)
-            dialog.dismiss()
-        }
-
-        builder.setNegativeButton("Cancelar") { dialog, _ ->
-            dialog.dismiss()
-        }
-
-        builder.show()
+        AlertDialog.Builder(requireContext())
+            .setTitle("Confirmar eliminación")
+            .setMessage("¿Estás seguro de que deseas eliminar este producto?")
+            .setPositiveButton("Aceptar") { dialog, _ ->
+                deleteProductFromFirestore(product)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     private fun deleteProductFromFirestore(product: Product) {
         firestore.collection("products").document(product.id).delete()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("Firestore", "Producto eliminado exitosamente")
+                    Log.d("Firestore", "Producto eliminado")
                     adapter.removeProduct(product)
                 } else {
-                    Log.e("Firestore", "Error al eliminar el producto", task.exception)
+                    Log.e("Firestore", "Error al eliminar producto", task.exception)
                 }
             }
     }
@@ -160,11 +204,40 @@ class InventoryFragment : Fragment() {
         firestore.collection("products").document(updatedProduct.id).set(updatedProduct)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Log.d("Firestore", "Producto actualizado exitosamente")
+                    Log.d("Firestore", "Producto actualizado")
                 } else {
-                    Log.e("Firestore", "Error al actualizar el producto", task.exception)
+                    Log.e("Firestore", "Error al actualizar producto", task.exception)
                 }
             }
+    }
+
+    private fun showSortOptions() {
+        val options = arrayOf("Nombre (A-Z)", "Stock (mayor a menor)", "Más reciente")
+        AlertDialog.Builder(requireContext())
+            .setTitle("Ordenar por:")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> sortByName()
+                    1 -> sortByStock()
+                    2 -> sortByRecent()
+                }
+            }
+            .show()
+    }
+
+    private fun sortByName() {
+        val sorted = filteredProductList.sortedBy { it.name.lowercase() }
+        adapter.updateList(sorted)
+    }
+
+    private fun sortByStock() {
+        val sorted = filteredProductList.sortedByDescending { it.stock }
+        adapter.updateList(sorted)
+    }
+
+    private fun sortByRecent() {
+        val sorted = filteredProductList.sortedByDescending { it.createdAt }
+        adapter.updateList(sorted)
     }
 
     override fun onDestroyView() {

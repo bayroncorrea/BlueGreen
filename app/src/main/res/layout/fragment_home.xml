@@ -1,33 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/homeFragmentRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_backgroud"
-    >
+    android:padding="10dp"
+    tools:context=".ui.home.HomeFragment">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
-        <!-- LinearLayout para la estructura principal -->
+        android:clipToPadding="false"
+        android:fillViewport="true">
+
         <LinearLayout
+            android:id="@+id/layoutContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/fondo"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="25dp">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <!-- Resumen del Inventario -->
+            <!-- Card resumen inventario -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/cardview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="10dp"
-                android:background="@color/white"
-                android:padding="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="6dp">
 
@@ -35,68 +36,65 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#c5c764">
+                    android:padding="16dp">
 
                     <TextView
                         android:id="@+id/txtInventorySummary"
                         android:layout_width="wrap_content"
-                        android:layout_height="35dp"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:layout_marginStart="7dp"
-                        android:gravity="center_vertical"
+                        android:gravity="center"
                         android:text="Tienes 0 productos en stock"
-                        android:textColor="#333"
+                        android:textColor="#333333"
                         android:textSize="18sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Botones de Acción Rápida -->
+            <!-- Botones de acción rápida -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <!-- Agregar Producto -->
-                <ImageButton
+                <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
                     android:id="@+id/btnAddProduct"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:background="@drawable/circle_button"
-                    android:contentDescription="Agregar Producto"
-                    android:src="@android:drawable/ic_input_add"/>
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:icon="@drawable/add"
+                    android:text="Agregar producto"
+                    app:backgroundTint="@color/md_theme_primary"
+                    app:iconTint="@color/white" />
 
-                <!-- Ver Inventario -->
                 <ImageButton
                     android:id="@+id/btnViewInventory"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:layout_marginStart="16dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="12dp"
                     android:background="@drawable/circle_button"
+                    android:backgroundTint="@color/md_theme_primaryContainer"
                     android:contentDescription="Ver Inventario"
                     android:src="@drawable/ic_home_black_24dp" />
 
-                <!-- Configuración -->
                 <ImageButton
                     android:id="@+id/btnSettings"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:layout_marginStart="16dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="12dp"
                     android:background="@drawable/circle_button"
-                    android:contentDescription="Configuración"
+                    android:backgroundTint="@color/md_theme_secondaryContainer"
+                    android:contentDescription="Configuraciones"
                     android:src="@drawable/ic_dashboard_black_24dp" />
             </LinearLayout>
 
-            <!-- Resumen de alerta de stock bajo -->
+            <!-- Card alerta de stock -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="35dp"
-                android:layout_marginTop="15dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:background="@color/white"
-                android:padding="16dp"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -104,43 +102,40 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#c5c764">
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/txtEmptyLowStock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="No hay alertas de stock bajo"
+                        android:textColor="#FF0000"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/txtLowStockAlert"
-                        android:layout_width="wrap_content"
-                        android:layout_height="35dp"
-                        android:layout_gravity="center"
-                        android:gravity="center_vertical"
-                        android:text="No hay alertas de stock bajo"
-                        android:textColor="#D32F2F"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No hay productos con bajo stock"
+                        android:textAlignment="center"
+                        android:textColor="#FF0000"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:visibility="gone" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-            <!-- RecyclerView fuera del LinearLayout para mostrar productos con bajo stock -->
+
+            <!-- Lista de productos con bajo stock -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerLowStock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="30dp"
-                android:layout_gravity="center_horizontal"
+                android:clipToPadding="false"
+                android:padding="8dp"
                 tools:listitem="@layout/item_inventory" />
-
-            <TextView
-                android:id="@+id/txtEmptyLowStock"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="No hay productos con bajo stock"
-                android:textAlignment="center"
-                android:textColor="#888"
-                android:textSize="16sp"
-                android:visibility="gone"
-                android:padding="8dp" />
-
-
         </LinearLayout>
-    </LinearLayout>
+
+    </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

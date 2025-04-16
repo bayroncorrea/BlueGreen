@@ -11,4 +11,5 @@
     <string name="one_product_in_stock">Tienes 1 producto en stock</string>
     <string name="multiple_products_in_stock">Tienes %d productos en stock</string>
     <string name="uploading_image">uploading_image</string>
+
 </resources>

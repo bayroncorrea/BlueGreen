@@ -79,7 +79,7 @@ class HomeViewModel : ViewModel() {
 
         _lowStockAlert.value = when {
             lowStockList.any { it.stock == 0 } -> "¡Alerta! Tienes productos agotados"
-            lowStockList.isNotEmpty() -> "¡Atención! Algunos productos tienen stock bajo"
+            lowStockList.isNotEmpty() -> "Algunos productos tienen stock bajo"
             else -> ""
         }
     }
