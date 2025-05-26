@@ -10,11 +10,14 @@ import com.bb.bluegreen.R
 import com.bumptech.glide.Glide
 
 class ProductAdapter(
-    private var productList: MutableList<Product> = mutableListOf()
+    private var productList: MutableList<Product> = mutableListOf(),
+    private val showActions: Boolean = true
+
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     private var onEditClickListener: ((Product) -> Unit)? = null
     private var onDeleteClickListener: ((Product) -> Unit)? = null
+
 
     // Set listener for edit button
     fun setOnEditClickListener(listener: (Product) -> Unit) {
@@ -62,6 +65,10 @@ class ProductAdapter(
             .placeholder(R.drawable.ic_launcher_foreground)
             .error(R.drawable.ic_launcher_foreground)
             .into(holder.productImage)
+
+        // Mostrar u ocultar botones
+        holder.editButton.visibility = if (showActions) View.VISIBLE else View.GONE
+        holder.deleteButton.visibility = if (showActions) View.VISIBLE else View.GONE
 
         // Edit button listener
         holder.editButton.setOnClickListener {

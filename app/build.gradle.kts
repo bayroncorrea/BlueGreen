@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.firebase.database.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.core)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.play.services.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,4 +73,7 @@ dependencies {
     implementation (libs.firebase.storage.ktx)
     implementation(libs.okhttp)
     implementation(libs.json)
+    implementation (libs.firebase.auth)
+    implementation (libs.play.services.auth)
+    implementation (libs.lottie)
 }

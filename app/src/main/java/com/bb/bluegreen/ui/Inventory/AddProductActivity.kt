@@ -145,11 +145,11 @@ class AddProductActivity : AppCompatActivity() {
     private fun openImageOptions() {
         val options = arrayOf("Seleccionar desde galería", "Tomar foto")
         AlertDialog.Builder(this).setTitle("Agregar imagen").setItems(options) { _, which ->
-                when (which) {
-                    0 -> openGallery()
-                    1 -> checkCameraPermission()
-                }
-            }.show()
+            when (which) {
+                0 -> openGallery()
+                1 -> checkCameraPermission()
+            }
+        }.show()
     }
 
     private fun openGallery() {
@@ -364,25 +364,40 @@ class AddProductActivity : AppCompatActivity() {
         stock: Int,
         imageUrl: String = ""
     ) {
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        val ownerId = currentUser?.uid
+
+        if (ownerId == null) {
+            Toast.makeText(this, "No hay usuario autenticado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val product = hashMapOf(
             "id" to productId,
             "name" to name,
             "barcode" to barcode,
             "price" to price,
             "stock" to stock,
-            "imageUrl" to imageUrl
+            "imageUrl" to imageUrl,
+            "ownerId" to ownerId // 👈 IMPORTANTE
         )
 
-        firestore.collection("products").document(productId).set(product).addOnSuccessListener {
+        firestore.collection("products").document(productId)
+            .set(product)
+            .addOnSuccessListener {
                 Toast.makeText(this, "Producto agregado exitosamente", Toast.LENGTH_SHORT).show()
                 finish()
-            }.addOnFailureListener { e ->
+            }
+            .addOnFailureListener { e ->
                 Log.e("FIRESTORE_ERROR", "Error al guardar producto: ${e.message}")
                 Toast.makeText(
-                    this, "Error al guardar el producto: ${e.message}", Toast.LENGTH_SHORT
+                    this,
+                    "Error al guardar el producto: ${e.message}",
+                    Toast.LENGTH_SHORT
                 ).show()
             }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -404,5 +419,4 @@ class AddProductActivity : AppCompatActivity() {
             null
         }
     }
-
 }

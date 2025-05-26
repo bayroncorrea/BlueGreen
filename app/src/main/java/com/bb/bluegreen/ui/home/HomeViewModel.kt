@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.bb.bluegreen.ui.Inventory.Product
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeViewModel : ViewModel() {
@@ -24,7 +25,10 @@ class HomeViewModel : ViewModel() {
     private var inventoryList: List<Product> = listOf()
 
     fun loadInventoryFromFirebase() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
         firestore.collection("products")
+            .whereEqualTo("ownerId", userId) // 🔍 Filtro por usuario actual
             .get()
             .addOnSuccessListener { querySnapshot ->
                 Log.d("FirestoreDebug", "Documentos recibidos: ${querySnapshot.documents.size}")
@@ -40,7 +44,9 @@ class HomeViewModel : ViewModel() {
                             barcode = doc.getString("barcode") ?: "",
                             price = doc.getDouble("price") ?: 0.0,
                             stock = stock,
-                            imageUrl = doc.getString("imageUrl") ?: ""
+                            imageUrl = doc.getString("imageUrl") ?: "",
+                            ownerId = doc.getString("ownerId") ?: "",
+                            createdAt = doc.getLong("createdAt") ?: 0L
                         )
                     } catch (e: Exception) {
                         Log.e("MappingError", "Error con documento ${doc.id}", e)
@@ -54,7 +60,7 @@ class HomeViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 Log.e("FirestoreError", "Error al cargar productos", e)
-                _totalStock.value = 0 // Resetear a 0 en caso de error
+                _totalStock.value = 0
             }
     }
 
@@ -82,11 +88,5 @@ class HomeViewModel : ViewModel() {
             lowStockList.isNotEmpty() -> "Algunos productos tienen stock bajo"
             else -> ""
         }
-    }
-
-    // Para actualizar el umbral de bajo stock si es necesario
-    fun setLowStockThreshold(threshold: Int) {
-        lowStockThreshold = threshold
-        checkLowStock()
     }
 }

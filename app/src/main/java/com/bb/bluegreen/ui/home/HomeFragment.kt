@@ -10,7 +10,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.FragmentHomeBinding
+import com.bb.bluegreen.loginActivity
 import com.bb.bluegreen.ui.Inventory.AddProductActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 
 class HomeFragment : Fragment() {
 
@@ -22,19 +26,24 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
 
-// Inicialización del RecyclerView
-        lowStockAdapter = LowStockAdapter(emptyList())
+        // Botón de cerrar sesión
+        binding.btnLogout.setOnClickListener {
+            logout()
+        }
+
+        // Inicialización del RecyclerView
+        lowStockAdapter = LowStockAdapter(emptyList(), showActions = false)
+
+
         binding.recyclerLowStock.adapter = lowStockAdapter
-        binding.recyclerLowStock.layoutManager =
-            LinearLayoutManager(requireContext())
+        binding.recyclerLowStock.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerLowStock.setHasFixedSize(true)
 
         setupObservers()
-        setupButtons()
 
         // Cargar inventario desde Firestore
         viewModel.loadInventoryFromFirebase()
@@ -43,7 +52,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Observa cambios en el total de productos en inventario
         viewModel.totalStock.observe(viewLifecycleOwner) { total ->
             binding.txtInventorySummary.text = when {
                 total == 0 -> getString(R.string.no_products_in_stock)
@@ -52,7 +60,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Observa productos con bajo stock
         viewModel.lowStockProducts.observe(viewLifecycleOwner) { lowStockList ->
             if (lowStockList.isNotEmpty()) {
                 lowStockAdapter.updateProducts(lowStockList)
@@ -64,7 +71,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Observa alerta de bajo stock
         viewModel.lowStockAlert.observe(viewLifecycleOwner) { alertText ->
             binding.txtLowStockAlert.text = alertText
             binding.txtLowStockAlert.visibility =
@@ -72,18 +78,20 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun setupButtons() {
-        binding.btnAddProduct.setOnClickListener {
-            val activity = requireActivity()
-            activity.startActivity(Intent(activity, AddProductActivity::class.java))
-        }
+    private fun logout() {
+        // Cerrar sesión de Firebase
+        FirebaseAuth.getInstance().signOut()
 
-        binding.btnViewInventory.setOnClickListener {
-            // Navegar para ver inventario
-        }
-
-        binding.btnSettings.setOnClickListener {
-            // Navegar a configuraciones
+        // Cerrar sesión de Google
+        GoogleSignIn.getClient(
+            requireContext(),
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+        ).signOut().addOnCompleteListener {
+            // Redirigir al login
+            val intent = Intent(requireContext(), loginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            requireActivity().finish()
         }
     }
 

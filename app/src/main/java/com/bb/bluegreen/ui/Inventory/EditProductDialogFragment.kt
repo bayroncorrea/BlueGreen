@@ -81,6 +81,10 @@ class EditProductDialogFragment(
             updatedProduct.barcode = barcode
             updatedProduct.price = price
             updatedProduct.stock = stock
+            updatedProduct.ownerId = product.ownerId
+            updatedProduct.createdAt = product.createdAt
+
+
 
             // Si se seleccionó una nueva imagen, actualizar imageUrl (puedes subirla a Firebase después)
             selectedImageUri?.let {

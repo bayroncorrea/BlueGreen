@@ -13,6 +13,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.databinding.FragmentInventoryBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
@@ -71,7 +72,7 @@ class InventoryFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = ProductAdapter(mutableListOf())
+        adapter = ProductAdapter(mutableListOf(), showActions = true)
 
         adapter.setOnEditClickListener { product ->
             val editDialog = EditProductDialogFragment(product) { updatedProduct ->
@@ -146,7 +147,13 @@ class InventoryFragment : Fragment() {
     }
 
     private fun fetchProductsFromFirestore() {
+        Log.d("Firestore", "Iniciando carga de productos...")
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val ownerId = currentUser?.uid
+        Log.d("Firestore", "Usuario actual UID: $ownerId")
+
         firestore.collection("products")
+            .whereEqualTo("ownerId", ownerId)
             .orderBy("name", Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { snapshot ->
@@ -155,7 +162,7 @@ class InventoryFragment : Fragment() {
 
                 for (document in snapshot) {
                     val product = document.toObject<Product>()
-                    product?.let { newProductList.add(it) }
+                    product.let { newProductList.add(it) }
                     Log.d("Firestore", "Producto cargado: ${product.name}")
                 }
 

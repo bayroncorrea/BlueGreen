@@ -1,6 +1,8 @@
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/gradient_backgroud">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,19 +15,25 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:gravity="center"
-            android:text="Agregar Producto"
+            android:layout_marginTop="30dp"
+            android:textColor="@color/black"
             android:textSize="32sp"
+            android:text="Agregar Producto"
             android:textStyle="bold" />
 
         <!-- Nombre -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre del producto">
+            android:hint="Nombre del producto"
+            android:textColorHint="#5F5F5F"
+            app:counterTextColor="@color/black">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etProductName"
                 android:layout_width="match_parent"
+                android:background="#D3D3D3"
+                android:textColor="@color/black"
                 android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -34,12 +42,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:textColorHint="#5F5F5F"
+            app:counterTextColor="@color/black"
             android:hint="Código de barras">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etBarcode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="#D3D3D3"
+                android:textColor="@color/black"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -48,12 +60,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:textColorHint="#5F5F5F"
+            app:counterTextColor="@color/black"
             android:hint="Precio">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="#D3D3D3"
+                android:textColor="@color/black"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -62,12 +78,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:textColorHint="#5F5F5F"
+            app:counterTextColor="@color/black"
             android:hint="Stock">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etStock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="#D3D3D3"
+                android:textColor="@color/black"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 

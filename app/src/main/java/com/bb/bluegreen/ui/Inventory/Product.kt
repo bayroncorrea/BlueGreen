@@ -21,8 +21,11 @@ data class Product(
     @get:PropertyName("imageUrl") @set:PropertyName("imageUrl")
     var imageUrl: String = "",
 
-    val createdAt: Long = System.currentTimeMillis()
+    @get:PropertyName("ownerId") @set:PropertyName("ownerId")
+    var ownerId: String = "",
+
+    var createdAt: Long = System.currentTimeMillis()
 ) {
     // Constructor sin parámetros requerido por Firestore
-    constructor() : this("", "", "", 0.0, 0, "", 0)
+    constructor() : this("", "", "", 0.0, 0, "", "", 0)
 }
