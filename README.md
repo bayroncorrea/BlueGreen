@@ -20,7 +20,12 @@ Una aplicación Android creada con Firebase para gestionar datos (inventario, ga
 4. Ejecuta en un emulador o dispositivo real
 
 ## 🖼️ Capturas de pantalla
-> *(Agrega imágenes si puedes para hacerlo más visual)*
+![Image](https://github.com/user-attachments/assets/9b576893-b5e7-4e6b-b888-b6078111350e)
+![Image](https://github.com/user-attachments/assets/cdf6cdf1-c431-4a5a-b704-89fbfaaebefa)
+![Image](https://github.com/user-attachments/assets/45ece543-cd90-4d57-adbb-f30ca4bd14d0)
+![Image](https://github.com/user-attachments/assets/4e112f78-9280-4c87-844f-df108f4a654c)
+![Image](https://github.com/user-attachments/assets/2fdee0ab-94c1-4517-9870-bc964eb4dfb7)
+![Image](https://github.com/user-attachments/assets/885c659a-b3ec-4ffe-8ec4-8ccac0298dfe)
 
 ---
 📱 Aplicación publicada en Google Play:
