@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bb.bluegreen.R
 import com.bb.bluegreen.databinding.FragmentHomeBinding
 import com.bb.bluegreen.loginActivity
-import com.bb.bluegreen.ui.Inventory.AddProductActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 
 class HomeFragment : Fragment() {
@@ -22,17 +22,23 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: HomeViewModel
     private lateinit var lowStockAdapter: LowStockAdapter
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
 
         // Botón de cerrar sesión
         binding.btnLogout.setOnClickListener {
             logout()
+        }
+        binding.cardView.setOnClickListener {
+            // Cambiar manualmente la pestaña activa del BottomNavigationView
+
+            val navView = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
+            navView.selectedItemId = R.id.navigation_dashboard
         }
 
         // Inicialización del RecyclerView

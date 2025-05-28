@@ -52,7 +52,10 @@ class loginActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == GOOGLE_SIGN_IN_CODE) {
-            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(data)
+            val task =
+                com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(
+                    data
+                )
             if (task.isSuccessful) {
                 val account = task.result
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
@@ -72,8 +75,14 @@ class loginActivity : AppCompatActivity() {
                             val email = user.email ?: ""
                             val photoUrl = user.photoUrl?.toString() ?: ""
 
-                            Log.d("FirestoreDebug", "Datos del usuario: Nombre=$name, Email=$email, Foto=$photoUrl")
-                            Log.d("FirestoreDebug", "Intentando guardar usuario en Firestore con UID: $uid")
+                            Log.d(
+                                "FirestoreDebug",
+                                "Datos del usuario: Nombre=$name, Email=$email, Foto=$photoUrl"
+                            )
+                            Log.d(
+                                "FirestoreDebug",
+                                "Intentando guardar usuario en Firestore con UID: $uid"
+                            )
 
                             val userData = hashMapOf(
                                 "nombre" to name,
@@ -86,22 +95,46 @@ class loginActivity : AppCompatActivity() {
                                 .document(uid)
                                 .set(userData)
                                 .addOnSuccessListener {
-                                    Log.d("FirestoreDebug", "Usuario guardado en Firestore: UID=$uid")
-                                    Toast.makeText(this, "Bienvenido $email", Toast.LENGTH_SHORT).show()
+                                    Log.d(
+                                        "FirestoreDebug",
+                                        "Usuario guardado en Firestore: UID=$uid"
+                                    )
+                                    Toast.makeText(this, "Bienvenido $email", Toast.LENGTH_SHORT)
+                                        .show()
                                     startActivity(Intent(this, MainActivity::class.java))
                                     finish()
                                 }
                                 .addOnFailureListener { e ->
-                                    Log.e("FirestoreError", "Error guardando usuario en Firestore", e)
-                                    Toast.makeText(this, "Error al guardar usuario", Toast.LENGTH_SHORT).show()
+                                    Log.e(
+                                        "FirestoreError",
+                                        "Error guardando usuario en Firestore",
+                                        e
+                                    )
+                                    Toast.makeText(
+                                        this,
+                                        "Error al guardar usuario",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                         } else {
-                            Log.e("AuthDebug", "Fallo login Firebase: ${authResult.exception?.message}", authResult.exception)
-                            Toast.makeText(this, "Error al iniciar sesión con Firebase", Toast.LENGTH_SHORT).show()
+                            Log.e(
+                                "AuthDebug",
+                                "Fallo login Firebase: ${authResult.exception?.message}",
+                                authResult.exception
+                            )
+                            Toast.makeText(
+                                this,
+                                "Error al iniciar sesión con Firebase",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
             } else {
-                Log.e("AuthDebug", "Error al obtener cuenta de Google: ${task.exception?.message}", task.exception)
+                Log.e(
+                    "AuthDebug",
+                    "Error al obtener cuenta de Google: ${task.exception?.message}",
+                    task.exception
+                )
             }
         }
     }

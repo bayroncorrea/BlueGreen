@@ -379,7 +379,7 @@ class AddProductActivity : AppCompatActivity() {
             "price" to price,
             "stock" to stock,
             "imageUrl" to imageUrl,
-            "ownerId" to ownerId // 👈 IMPORTANTE
+            "ownerId" to ownerId //
         )
 
         firestore.collection("products").document(productId)

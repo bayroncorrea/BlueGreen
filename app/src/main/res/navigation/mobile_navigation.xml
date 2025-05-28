@@ -8,7 +8,13 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.bb.bluegreen.ui.home.HomeFragment"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_inventory"
+            app:destination="@id/navigation_dashboard" />
+    </fragment>
+
 
     <fragment
         android:id="@+id/navigation_dashboard"

@@ -1,24 +1,19 @@
 package com.bb.bluegreen.ui.Perfil
 
-import android.app.Activity
 import android.content.Intent
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.bb.bluegreen.databinding.FragmentPerfilBinding
+import com.bb.bluegreen.loginActivity
 import com.bumptech.glide.Glide
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import java.io.InputStream
 
 class PerfilFragment : Fragment() {
 
@@ -27,24 +22,16 @@ class PerfilFragment : Fragment() {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
-    private var imageUri: Uri? = null
 
-    private val pickImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == Activity.RESULT_OK && it.data != null) {
-            imageUri = it.data!!.data
-            val inputStream: InputStream? = imageUri?.let { uri ->
-                requireContext().contentResolver.openInputStream(uri)
-            }
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            binding.imageProfile.setImageBitmap(bitmap)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPerfilBinding.inflate(inflater, container, false)
+
+        binding.btnSalir.setOnClickListener {
+            logout()
+        }
         return binding.root
     }
 
@@ -53,114 +40,75 @@ class PerfilFragment : Fragment() {
 
         cargarDatosPerfil()
 
-        binding.btnSelectProfileImage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            pickImage.launch(intent)
-        }
-
         guardarDatosInicialesDeUsuario()
 
-        binding.btnUpdateProfile.setOnClickListener {
-            val nombre = binding.etName.text.toString().trim()
-            val email = binding.etEmail.text.toString().trim()
-
-            if (nombre.isEmpty() || email.isEmpty()) {
-                Toast.makeText(requireContext(), "Nombre y correo no pueden estar vacíos", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            binding.progressBar.visibility = View.VISIBLE
-
-            val userId = auth.currentUser?.uid ?: return@setOnClickListener
-
-            val userMap = hashMapOf(
-                "nombre" to nombre,
-                "email" to email
-            )
-
-            if (imageUri != null) {
-                val ref = storage.reference.child("usuarios/$userId/perfil.jpg")
-                ref.putFile(imageUri!!)
-                    .addOnSuccessListener {
-                        ref.downloadUrl.addOnSuccessListener { uri ->
-                            userMap["imagenUrl"] = uri.toString()
-                            guardarDatosFirestore(userId, userMap)
-                        }
-                    }
-                    .addOnFailureListener {
-                        mostrarError("Error al subir la imagen")
-                        binding.progressBar.visibility = View.GONE
-                    }
-            } else {
-                guardarDatosFirestore(userId, userMap)
-            }
-        }
     }
 
     private fun guardarDatosInicialesDeUsuario() {
         val user = auth.currentUser ?: return
 
+        val locale = resources.configuration.locales[0]
+        val countryCode = locale.country
+        val country = java.util.Locale("", countryCode).displayCountry
+
         val userData = hashMapOf(
             "nombre" to (user.displayName ?: ""),
-            "email" to (user.email ?: "")
+            "email" to (user.email ?: ""),
+            "pais" to country
         )
 
         val userDocRef = db.collection("usuarios").document(user.uid)
 
-        userDocRef.get().addOnSuccessListener { document ->
-            if (!document.exists()) {
-                userDocRef.set(userData)
-                    .addOnSuccessListener {
-                        Log.d("Firestore", "Perfil inicial guardado")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("Firestore", "Error al guardar perfil inicial", e)
-                    }
+        userDocRef.set(userData, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener {
+                Log.d("Firestore", "Perfil actualizado con país: $country")
             }
-        }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error al guardar perfil", e)
+            }
     }
+
 
     private fun cargarDatosPerfil() {
         val userId = auth.currentUser?.uid ?: return
+        val user = auth.currentUser
 
-        db.collection("usuarios").document(userId).get()
-            .addOnSuccessListener { document ->
-                if (document != null) {
-                    binding.etName.setText(document.getString("nombre") ?: "")
-                    binding.etEmail.setText(document.getString("email") ?: "")
+        db.collection("usuarios").document(userId).get().addOnSuccessListener { document ->
+            if (document != null) {
+                binding.etName.text = document.getString("nombre") ?: ""
+                binding.etEmail.text = document.getString("email") ?: ""
+                binding.etUbicacion.text = document.getString("pais") ?: "Ubicación desconocida"
 
-                    val imagenUrl = document.getString("imagenUrl")
-                    if (!imagenUrl.isNullOrEmpty()) {
-                        Glide.with(this)
-                            .load(imagenUrl)
-                            .centerCrop()
-                            .into(binding.imageProfile)
+                val imagenUrl = document.getString("imagenUrl")
+
+                if (!imagenUrl.isNullOrEmpty()) {
+                    Glide.with(this).load(imagenUrl).circleCrop().into(binding.imageProfile)
+                } else {
+                    val photoUrl = user?.photoUrl
+                    if (photoUrl != null) {
+                        Glide.with(this).load(photoUrl).circleCrop().into(binding.imageProfile)
                     }
                 }
             }
-            .addOnFailureListener {
-                mostrarError("Error al cargar datos del perfil")
-            }
-    }
-
-    private fun guardarDatosFirestore(userId: String, userMap: HashMap<String, String>) {
-        db.collection("usuarios").document(userId).set(userMap)
-            .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Perfil actualizado correctamente", Toast.LENGTH_SHORT).show()
-                binding.progressBar.visibility = View.GONE
-            }
-            .addOnFailureListener {
-                mostrarError("Error al guardar los datos")
-                binding.progressBar.visibility = View.GONE
-            }
-    }
-
-    private fun mostrarError(mensaje: String) {
-        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun logout() {
+        FirebaseAuth.getInstance().signOut()
+
+        GoogleSignIn.getClient(
+            requireContext(),
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+        ).signOut().addOnCompleteListener {
+            val intent = Intent(requireContext(), loginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            requireActivity().finish()
+        }
     }
 }

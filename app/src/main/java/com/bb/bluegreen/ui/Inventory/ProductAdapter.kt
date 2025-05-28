@@ -1,5 +1,6 @@
 package com.bb.bluegreen.ui.Inventory
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,6 +54,7 @@ class ProductAdapter(
         return ProductViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         val product = productList[position]
         holder.name.text = product.name
@@ -83,7 +85,6 @@ class ProductAdapter(
 
     override fun getItemCount(): Int = productList.size
 
-    // Método para actualizar la lista de productos sin DiffUtil
     fun updateList(newList: List<Product>) {
         productList.clear()
         productList.addAll(newList)
